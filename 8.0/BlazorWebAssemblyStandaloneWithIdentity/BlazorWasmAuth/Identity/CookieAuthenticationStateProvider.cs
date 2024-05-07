@@ -155,7 +155,7 @@ namespace BlazorWasmAuth.Identity
                 /*.AddOtlpExporter(options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })*/
                 .Build();

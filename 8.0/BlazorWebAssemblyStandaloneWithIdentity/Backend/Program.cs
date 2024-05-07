@@ -27,11 +27,11 @@ builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
                 .AddService(DiagnosticsConfig.ServiceName))
             .AddAspNetCoreInstrumentation()
-            //.AddConsoleExporter()
+            .AddConsoleExporter()
             .AddOtlpExporter()/*options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })*/
         )
@@ -48,12 +48,12 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter()/*options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })*/
         );
 
-string ServiceName = "BlazorWebAssemblyStandaloneWithIdentityBackend";
+/*string ServiceName = "BlazorWebAssemblyStandaloneWithIdentityBackend";
 //builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Services.AddLogging(builder =>
 {
@@ -61,18 +61,18 @@ builder.Services.AddLogging(builder =>
     {
         //options.AddConsoleExporter();
         options.AddOtlpExporter(
-    options =>
-    {
-        options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
-        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-    });
+            options =>
+            {
+                options.Endpoint = new Uri("https://otlp.nr-data.net");
+                options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
+                options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+            });
         options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
             serviceName: ServiceName,
             serviceVersion: "0.0.1"));
     });
 }
-            );
+            );*/
 // Add OpenTelemetry Logs to our Service Collection
 /*builder.Logging.AddOpenTelemetry(x =>
 {
@@ -133,7 +133,6 @@ builder.Services.AddCors(
             .AllowCredentials()
             .WithExposedHeaders("*")));
 
-
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 
@@ -166,8 +165,6 @@ app.UseCors("wasm");
 app.UseAuthentication();
 app.UseAuthorization();
 
-ActivitySource MyLibraryActivitySource = new(
-                "MyCompany.MyProduct.MyLibrary");
 // Provide an end point to clear the cookie for logout
 //
 // For more information on the logout endpoint and antiforgery, see:
@@ -176,36 +173,10 @@ app.MapPost("/logout", async (SignInManager<AppUser> signInManager, [FromBody] o
 {
     DiagnosticsConfig.logger.LogInformation(eventId: 123, "Entering logout");
     //DiagnosticsConfig.logger.LogInformation(eventId: 123, "Entering logout - header: " + data);
-    // todo: look for trace id, if found, comntinue trace with new span
-    var tracerProvider = Sdk.CreateTracerProviderBuilder()
-                // The following adds subscription to activities from Activity Source
-                // named "MyCompany.MyProduct.MyLibrary" only.
-                .AddSource("MyCompany.MyProduct.MyLibrary")
 
-                // The following adds subscription to activities from all Activity Sources
-                // whose name starts with "AbcCompany.XyzProduct.".
-                .AddSource("AbcCompany.XyzProduct.*")
-                .ConfigureResource(resource => resource.AddAttributes(new List<KeyValuePair<string, object>>
-                    {
-                        new KeyValuePair<string, object>("static-attribute1", "v1"),
-                        new KeyValuePair<string, object>("static-attribute2", "v2"),
-                    }))
-                .ConfigureResource(resource => resource.AddService("BlazorWebAssemblyStandaloneWithIdentityBackend"))
-                .AddConsoleExporter()
-                .AddOtlpExporter(options =>
-    {
-        options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
-        //options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-    })
-    .Build();
-
-    // This activity source is enabled.
-    using (var activity = MyLibraryActivitySource.StartActivity("Logout"))
-    {
-        activity?.SetTag("foo", 1);
-        activity?.SetTag("bar", "Hello, World!");
-    }
+    using var parentActivity = DiagnosticsConfig.ActivitySource.StartActivity("LogoutActivity");
+    parentActivity?.SetTag("foo", 1);
+    parentActivity?.SetTag("bar", "Hello, World!");
 
     if (empty is not null)
     {
@@ -236,6 +207,54 @@ app.MapGet("/roles", (ClaimsPrincipal user) =>
                     c.Value,
                     c.ValueType
                 });
+
+        using var parentActivity = DiagnosticsConfig.ActivitySource.StartActivity("RolesParentActivity");
+
+        using (var childActivity = DiagnosticsConfig.ActivitySource.StartActivity("RolesChildActivity"))
+        {
+            childActivity?.SetTag("CustomActivitySpan", "simulatedActivty");
+            childActivity?.SetTag("roles", TypedResults.Json(roles));
+
+            int i = 1;
+            foreach (dynamic role in roles)
+            {
+                childActivity?.SetTag("role " + i, role.Value);
+                i++;
+            }
+
+            // Instantiate random number generator using system-supplied value as seed.
+            var rand = new Random();
+            int waitTime = rand.Next(500, 5000);
+
+            using (var sleepActivity = DiagnosticsConfig.ActivitySource.StartActivity("RolesHeavyLiftingSleep"))
+            {
+                // do some heavy lifting work
+                Thread.Sleep(waitTime);
+
+                string waitMsg = string.Format(@"ChildActivty simulated wait ({0}ms)", waitTime);
+                sleepActivity?.SetTag("simulatedWaitMsg", waitMsg);
+                sleepActivity?.SetTag("simulatedWaitTimeMs", waitTime);
+                Console.WriteLine(waitMsg);
+                DiagnosticsConfig.logger.LogInformation(eventId: 123, waitMsg);
+            }
+
+            try
+            {
+                // sometimes we just have to fail, right?
+                if (waitTime >= 1000 &&
+                    waitTime < 2500)
+                {
+                    throw new Exception("fakeException");
+                }
+            }
+            catch (Exception ex)
+            {
+                // childActivity.RecordException(new Exception("fakeException"));
+                childActivity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                DiagnosticsConfig.logger.LogError("False Error log within ChildSpan");
+            }
+
+        }
 
         return TypedResults.Json(roles);
     }
@@ -272,7 +291,7 @@ class FormModel
 
 public static class DiagnosticsConfig
 {
-    public const string ServiceName = "BlazorWebAssemblyStandaloneWithIdentityBackend";
+    public const string ServiceName = "BlazorWASMBackend";
     public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
 
     public static Meter Meter = new(ServiceName);
@@ -283,7 +302,7 @@ public static class DiagnosticsConfig
         {
             builder.AddOpenTelemetry(options =>
             {
-                //options.AddConsoleExporter();
+                options.AddConsoleExporter();
                 options.AddOtlpExporter();
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
                     serviceName: ServiceName,

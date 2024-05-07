@@ -1,8 +1,9 @@
-export NEW_RELIC_LICENSE_KEY=NEW_RELIC_LICENSE_KEY
+export NEW_RELIC_LICENSE_KEY=MY_NEW_RELIC_LICENSE_KEY
 export OTEL_EXPORTER_OTLP_HEADERS=api-key=${NEW_RELIC_LICENSE_KEY}
 export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-export OTEL_SERVICE_NAME=BlazorWebAssemblyStandaloneWithIdentityFrontend
+#export OTEL_SERVICE_NAME=BlazorWebAssemblyStandaloneWithIdentityFrontend
+export OTEL_SERVICE_NAME=BlazorWASMFrontend
 export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=staging,service.version=1.0.0
 export DOTNET_RUNTIME_ID="osx-x64"
 export ENABLE_PROFILING=true

@@ -36,7 +36,7 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter(options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })
         )
@@ -53,7 +53,7 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter(options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })
         );
@@ -74,7 +74,7 @@ builder.Services.AddOpenTelemetry()
 //builder.Services.AddSingleton<DiagnosticsConfig.logger>();
 /*builder.Services.AddScoped(
     sp => (ILogger)sp.GetRequiredService<DiagnosticsConfig.logger>());*/
-string ServiceName = "BlazorWebAssemblyStandaloneWithIdentityFrontend";
+string ServiceName = "BlazorWASMFrontend";
 builder.Services.AddLogging(builder =>
 {
     builder.AddOpenTelemetry(options =>
@@ -84,7 +84,7 @@ builder.Services.AddLogging(builder =>
     options =>
     {
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
         options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     });*/
         options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
@@ -106,7 +106,7 @@ builder.Services.AddLogging(builder =>
     serviceName: ServiceName,
     serviceVersion: "0.0.1"));*/
 /*options.Endpoint = new Uri("https://otlp.nr-data.net");
-options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
 }
               )));*/
 /*builder.Logging.AddOpenTelemetry(builder => builder.AddOtlpExporter(
@@ -118,14 +118,14 @@ options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
             serviceName: ServiceName,
             serviceVersion: "0.0.1"));*/
 /*    options.Endpoint = new Uri("https://otlp.nr-data.net");
-    options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+    options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
 }*/
 /*    "logging",
     options =>
     {
         // Note: Options can also be set via code but order is important. In the example here the code will apply after configuration.
         options.Endpoint = new Uri("https://otlp.nr-data.net");
-        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
     }*/
 //));
 
@@ -169,7 +169,7 @@ await builder.Build().RunAsync();
 
 public static class DiagnosticsConfig
 {
-    public const string ServiceName = "BlazorWebAssemblyStandaloneWithIdentityFrontend";
+    public const string ServiceName = "BlazorWASMFrontend";
     public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
 
     public static Meter Meter = new(ServiceName);
@@ -189,7 +189,7 @@ public static class DiagnosticsConfig
                     {
                         // Note: Options can also be set via code but order is important. In the example here the code will apply after configuration.
                         options.Endpoint = new Uri("https://otlp.nr-data.net");
-                        options.Headers = "api-key=NEW_RELIC_LICENSE_KEY";
+                        options.Headers = "api-key=MY_NEW_RELIC_LICENSE_KEY";
                     });*/
                 options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
                     serviceName: ServiceName,

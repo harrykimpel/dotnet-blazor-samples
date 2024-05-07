@@ -1,6 +1,7 @@
 ﻿@page "/logout"
 @using BlazorWasmAuth.Identity
 @inject IAccountManagement Acct
+@inject ILogger<Login> Logger
 
 <PageTitle>Logout</PageTitle>
 
@@ -22,6 +23,8 @@
     {
         if (await Acct.CheckAuthenticatedAsync())
         {
+            Logger.LogInformation("LogoutAsync");
+
             await Acct.LogoutAsync();
         }
 
